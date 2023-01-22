@@ -717,7 +717,7 @@ namespace log4net.Core
 
                     // Determine whether to watch the file or not based on an app setting value:
 				    bool watchRepositoryConfigFile = false;
-#if NET_2_0 || MONO_2_0 || MONO_3_5 || MONO_4_0 || NETSTANDARD
+#if NET_2_0 || MONO_2_0 || MONO_3_5 || MONO_4_0 || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 				    Boolean.TryParse(SystemInfo.GetAppSetting("log4net.Config.Watch"), out watchRepositoryConfigFile);
 #else
                                     {

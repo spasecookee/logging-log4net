@@ -60,7 +60,7 @@ namespace log4net.Util.TypeConverters
 		/// <returns>the IPAddress</returns>
 		/// <remarks>
 		/// <para>
-		/// Uses the <see cref="IPAddress.Parse"/> method to convert the
+		/// Uses the <see cref="IPAddress.Parse(string)"/> method to convert the
 		/// <see cref="String"/> argument to an <see cref="IPAddress"/>.
 		/// If that fails then the string is resolved as a DNS hostname.
 		/// </para>
@@ -116,7 +116,7 @@ namespace log4net.Util.TypeConverters
 					}
 
 					// Try to resolve via DNS. This is a blocking call.
-#if NETSTANDARD
+#if NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 					IPHostEntry host = Dns.GetHostEntryAsync(str).GetAwaiter().GetResult();
 #else
 					IPHostEntry host = Dns.GetHostByName(str);

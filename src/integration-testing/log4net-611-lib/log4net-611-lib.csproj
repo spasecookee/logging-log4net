@@ -9,7 +9,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="log4net" Version="2.0.14" />
+    <ProjectReference Include="..\..\log4net\log4net.csproj" />
+    <!--<PackageReference Include="log4net" Version="2.0.14" />-->
   </ItemGroup>
 
 </Project>

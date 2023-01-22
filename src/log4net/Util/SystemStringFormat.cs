@@ -117,7 +117,7 @@ namespace log4net.Util
 				log4net.Util.LogLog.Warn(declaringType, "Exception while rendering format ["+format+"]", ex);
 				return StringFormatError(ex, format, args);
 			}
-#if !NET_2_0 && !MONO_2_0 && !MONO_3_5 && !MONO_4_0 && !NETSTANDARD
+#if !NET_2_0 && !MONO_2_0 && !MONO_3_5 && !MONO_4_0 && !NETSTANDARD && !NETCOREAPP3_1_OR_GREATER
 			catch
 			{
 				log4net.Util.LogLog.Warn(declaringType, "Exception while rendering format ["+format+"]");
@@ -156,7 +156,7 @@ namespace log4net.Util
 				log4net.Util.LogLog.Error(declaringType, "INTERNAL ERROR during StringFormat error handling", ex);
 				return "<log4net.Error>Exception during StringFormat. See Internal Log.</log4net.Error>";
 			}
-#if !NET_2_0 && !MONO_2_0 && !MONO_3_5 && !MONO_4_0 && !NETSTANDARD
+#if !NET_2_0 && !MONO_2_0 && !MONO_3_5 && !MONO_4_0 && !NETSTANDARD && !NETCOREAPP3_1_OR_GREATER
 			catch
 			{
 				log4net.Util.LogLog.Error(declaringType, "INTERNAL ERROR during StringFormat error handling");
@@ -218,7 +218,7 @@ namespace log4net.Util
 				{
 					buffer.Append("<Exception: ").Append(ex.Message).Append(">");
 				}
-#if !NET_2_0 && !MONO_2_0 && !MONO_3_5 && !MONO_4_0 && !NETSTANDARD
+#if !NET_2_0 && !MONO_2_0 && !MONO_3_5 && !MONO_4_0 && !NETSTANDARD && !NETCOREAPP3_1_OR_GREATER
 				catch
 				{
 					buffer.Append("<Exception>");

@@ -29,7 +29,7 @@ using System.Threading;
 using log4net.Util;
 using log4net.Layout;
 using log4net.Core;
-#if NET_4_5 || NETSTANDARD
+#if NET_4_5 || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 using System.Threading.Tasks;
 #endif
 
@@ -185,7 +185,7 @@ namespace log4net.Appender
 
             #region Override Implementation of Stream
 
-#if NETSTANDARD
+#if NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 			protected override void Dispose(bool disposing)
 			{
 				m_lockingModel.CloseFile();
@@ -240,7 +240,7 @@ namespace log4net.Appender
             }
 #endif
 
-#if NET_4_5 || NETSTANDARD
+#if NET_4_5 || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 			public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
 			{
 				AssertLocked();
@@ -284,7 +284,7 @@ namespace log4net.Appender
 
             void IDisposable.Dispose()
             {
-#if NETSTANDARD
+#if NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 				Dispose(true);
 #else
                 Close();
@@ -520,8 +520,15 @@ namespace log4net.Appender
             protected Stream CreateStream(string filename, bool append, FileShare fileShare)
             {
                 filename = Environment.ExpandEnvironmentVariables(filename);
+#if !(NETSTANDARD || NETCOREAPP3_1_OR_GREATER)
                 using (CurrentAppender.SecurityContext.Impersonate(this))
                 {
+                    return GetFileStream();
+				}
+#else
+                return CurrentAppender.SecurityContext.Impersonate(GetFileStream);
+#endif
+                FileStream GetFileStream() {
                     // Ensure that the directory structure exists
                     string directoryFullName = Path.GetDirectoryName(filename);
 
@@ -548,10 +555,14 @@ namespace log4net.Appender
             /// <param name="stream"></param>
             protected void CloseStream(Stream stream)
             {
+#if !(NETSTANDARD || NETCOREAPP3_1_OR_GREATER)
                 using (CurrentAppender.SecurityContext.Impersonate(this))
                 {
                     stream.Dispose();
                 }
+#else
+                CurrentAppender.SecurityContext.Impersonate(stream.Dispose);
+#endif
             }
         }
 
@@ -791,7 +802,7 @@ namespace log4net.Appender
             /// -<see cref="ReleaseLock"/> and <see cref="CloseFile"/>.
             /// </para>
             /// </remarks>
-#if NET_4_0 || MONO_4_0 || NETSTANDARD
+#if NET_4_0 || MONO_4_0 || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 			[System.Security.SecuritySafeCritical]
 #endif
             public override void OpenFile(string filename, bool append, Encoding encoding)
@@ -915,7 +926,7 @@ namespace log4net.Appender
             {
                 if (m_mutex != null)
                 {
-#if NET_4_0 || MONO_4_0 || NETSTANDARD
+#if NET_4_0 || MONO_4_0 || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 					m_mutex.Dispose();
 #else
                     m_mutex.Close();
@@ -1268,11 +1279,14 @@ namespace log4net.Appender
 
             if (m_fileName != null)
             {
+#if !(NETSTANDARD || NETCOREAPP3_1_OR_GREATER)
                 using (SecurityContext.Impersonate(this))
                 {
                     m_fileName = ConvertToFullPath(m_fileName.Trim());
                 }
-
+#else
+                m_fileName = SecurityContext.Impersonate(() => ConvertToFullPath(m_fileName.Trim()));
+#endif
                 SafeOpenFile(m_fileName, m_appendToFile);
             }
             else
@@ -1520,11 +1534,14 @@ namespace log4net.Appender
             {
                 // Internal check that the fileName passed in is a rooted path
                 bool isPathRooted = false;
+#if !(NETSTANDARD || NETCOREAPP3_1_OR_GREATER)
                 using (SecurityContext.Impersonate(this))
                 {
                     isPathRooted = Path.IsPathRooted(fileName);
                 }
-
+#else
+                isPathRooted = SecurityContext.Impersonate(()=>Path.IsPathRooted(fileName));
+#endif
                 if (!isPathRooted)
                 {
                     LogLog.Error(declaringType,

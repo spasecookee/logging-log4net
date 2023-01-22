@@ -34,6 +34,7 @@ namespace log4net.Core
 	/// <author>Nicko Cadell</author>
 	public abstract class SecurityContext
 	{
+#if !(NETSTANDARD1_3_OR_GREATER || NETCOREAPP3_1_OR_GREATER)
 		/// <summary>
 		/// Impersonate this SecurityContext
 		/// </summary>
@@ -51,5 +52,9 @@ namespace log4net.Core
 		/// </para>
 		/// </remarks>
 		public abstract IDisposable Impersonate(object state);
+#else
+        public abstract void Impersonate(Action code);
+        public abstract T Impersonate<T>(Func<T> code);
+#endif
 	}
 }

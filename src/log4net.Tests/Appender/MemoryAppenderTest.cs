@@ -19,7 +19,7 @@
  *
 */
 
-#if NET_4_0 || MONO_3_5 || MONO_4_0 || NETSTANDARD
+#if NET_4_0 || MONO_3_5 || MONO_4_0 || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 
 using System;
 using System.Linq;

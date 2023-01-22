@@ -302,10 +302,10 @@ namespace log4net.Appender
 		/// Sends the event using a network message.
 		/// </para>
 		/// </remarks>
-#if NET_4_0 || MONO_4_0 || NETSTANDARD
+#if NET_4_0 || MONO_4_0 || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 		[System.Security.SecuritySafeCritical]
 #endif
-#if !NETSTANDARD1_3
+#if !NETSTANDARD1_3_OR_GREATER && !NETCOREAPP3_1_OR_GREATER
 		[System.Security.Permissions.SecurityPermission(System.Security.Permissions.SecurityAction.Demand, UnmanagedCode = true)]
 #endif
 		protected override void Append(LoggingEvent loggingEvent) 
@@ -314,7 +314,7 @@ namespace log4net.Appender
 
 			// Render the event in the callers security context
 			string renderedLoggingEvent = RenderLoggingEvent(loggingEvent);
-
+#if !(NETSTANDARD || NETCOREAPP3_1_OR_GREATER)
 			using(m_securityContext.Impersonate(this))
 			{
 				// Send the message
@@ -327,7 +327,21 @@ namespace log4net.Appender
 					nativeError = NativeError.GetError(returnValue);
 				}
 			}
+#else
+            m_securityContext.Impersonate(
+                () => {
+                    // Send the message
+                    int returnValue = NetMessageBufferSend(
+                        this.Server, this.Recipient, this.Sender, renderedLoggingEvent,
+                        renderedLoggingEvent.Length * Marshal.SystemDefaultCharSize);
 
+                    // Log the error if the message could not be sent
+                    if(returnValue != 0) {
+                        // Lookup the native error
+                        nativeError = NativeError.GetError(returnValue);
+                    }
+                });
+#endif
 			if (nativeError != null)
 			{
 				// Handle the error over to the ErrorHandler

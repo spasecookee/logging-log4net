@@ -19,7 +19,7 @@
  *
 */
 
-#if NET_2_0
+#if NET_2_0 || NETCOREAPP3_1_OR_GREATER
 
 using System;
 using log4net.Util;
@@ -52,7 +52,7 @@ namespace log4net.Tests.Util
                 Assert.AreEqual(Environment.GetFolderPath(specialFolder), evaluatedPattern);
             }
         }
-
+#if NET_2_0
         [Test]
         public void TestAppSettingPathConverter()
         {
@@ -110,6 +110,7 @@ namespace log4net.Tests.Util
             AppDomain ad = AppDomain.CreateDomain(domainName, null, ads);
             return ad;
         }
+#endif
     }
 }
 #endif

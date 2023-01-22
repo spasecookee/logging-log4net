@@ -38,7 +38,7 @@ SET NANTEXE_PATH=nant.exe
 IF NOT ERRORLEVEL 1 goto FoundNAnt
 
 REM Try hard coded path for NAnt
-SET NANTEXE_PATH=C:\Program Files\NAnt\nant-0.85\bin\nant.exe
+SET NANTEXE_PATH=C:\bin\nant-0.92\bin\nant.exe
 "%NANTEXE_PATH%" -help >NUL: 2>NUL:
 IF NOT ERRORLEVEL 1 goto FoundNAnt
 
@@ -56,7 +56,7 @@ REM Setup the build file
 IF EXIST nant.build (
 	SET BUILD_FILE=nant.build
 ) ELSE (
-	SET BUILD_FILE=%LOG4NET_DIR%\log4net.build
+	SET BUILD_FILE="%LOG4NET_DIR%\log4net.build"
 )
 
 ECHO BUILD_FILE is %BUILD_FILE%
@@ -117,7 +117,7 @@ REM ------------------------------------------
 SET RESULT=%~dp1
 REM Remove the trailing \
 SET RESULT=%RESULT:~0,-1%
-CALL :FullPath %RESULT%
+CALL :FullPath "%RESULT%"
 GOTO :EOF
 
 

@@ -17,7 +17,7 @@
 //
 #endregion
 
-#if NET_2_0 // really only because netstandard doesn't understand Assembly.GetCallingAssembly()
+#if NET_2_0 || NETCOREAPP3_1_OR_GREATER // really only because netstandard doesn't understand Assembly.GetCallingAssembly()
 using System;
 using System.Xml;
 using System.Collections;

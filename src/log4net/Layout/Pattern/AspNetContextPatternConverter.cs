@@ -1,4 +1,4 @@
-#if NET_2_0
+#if NET_2_0 || NETCOREAPP3_1_OR_GREATER
 #region Apache License
 //
 // Licensed to the Apache Software Foundation (ASF) under one or more 
@@ -23,8 +23,12 @@
 #if !NETCF && !SSCLI && !CLIENT_PROFILE
 
 using System.IO;
-using System.Web;
 using log4net.Core;
+#if NETCOREAPP2_1_OR_GREATER
+using Microsoft.AspNetCore.Http;
+#else
+using System.Web;
+#endif
 
 namespace log4net.Layout.Pattern
 {

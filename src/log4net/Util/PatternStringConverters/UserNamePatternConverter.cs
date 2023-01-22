@@ -18,6 +18,7 @@
 #endregion
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
 namespace log4net.Util.PatternStringConverters
@@ -31,6 +32,7 @@ namespace log4net.Util.PatternStringConverters
 	/// </para>
 	/// </remarks>
 	/// <author>Nicko Cadell</author>
+	[SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
 	internal sealed class UserNamePatternConverter : PatternConverter 
 	{
 		/// <summary>

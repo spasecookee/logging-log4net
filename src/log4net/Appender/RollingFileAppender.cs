@@ -244,7 +244,7 @@ namespace log4net.Appender
 #if !NETCF
 			if (m_mutexForRolling != null)
 			{
-#if NET_4_0 || MONO_4_0 || NETSTANDARD
+#if NET_4_0 || MONO_4_0 || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 				m_mutexForRolling.Dispose();
 #else
 				m_mutexForRolling.Close();
@@ -673,6 +673,7 @@ namespace log4net.Appender
 				long currentCount = 0;
 				if (append) 
 				{
+#if !(NETSTANDARD || NETCOREAPP3_1_OR_GREATER)
 					using(SecurityContext.Impersonate(this))
 					{
 						if (System.IO.File.Exists(fileName))
@@ -680,6 +681,14 @@ namespace log4net.Appender
 							currentCount = (new FileInfo(fileName)).Length;
 						}
 					}
+#else
+                    SecurityContext.Impersonate(
+                        () => {
+                            if(System.IO.File.Exists(fileName)) {
+                                currentCount = (new FileInfo(fileName)).Length;
+                            }
+                        });
+#endif
 				}
 				else
 				{
@@ -754,12 +763,19 @@ namespace log4net.Appender
 	
 			string fullPath = null;
 			string fileName = null;
-
+#if !(NETSTANDARD || NETCOREAPP3_1_OR_GREATER)
 			using(SecurityContext.Impersonate(this))
 			{
-				fullPath = Path.GetFullPath(m_baseFileName);
-				fileName = Path.GetFileName(fullPath);
+				fullPath = System.IO.Path.GetFullPath(m_baseFileName);
+				fileName = System.IO.Path.GetFileName(fullPath);
 			}
+#else
+            SecurityContext.Impersonate(
+                () => {
+                    fullPath = System.IO.Path.GetFullPath(m_baseFileName);
+                    fileName = System.IO.Path.GetFileName(fullPath);
+                });
+#endif
 
 			var arrayFiles = GetExistingFiles(fullPath);
 			InitializeRollBackups(fileName, arrayFiles);
@@ -796,21 +812,27 @@ namespace log4net.Appender
 			var alFiles = new ArrayList();
 
 			string directory = null;
+#if !(NETSTANDARD || NETCOREAPP3_1_OR_GREATER)
+            using(SecurityContext.Impersonate(this)) {
+                directory = DirectorySearch();
+            }
+#else
+            directory = SecurityContext.Impersonate(DirectorySearch);
+#endif
 
-			using(SecurityContext.Impersonate(this))
+            string DirectorySearch() 
 			{
 				var fullPath = Path.GetFullPath(baseFilePath);
-
-				directory = Path.GetDirectoryName(fullPath);
-				if (Directory.Exists(directory))
+                var dir = Path.GetDirectoryName(fullPath);
+                if(Directory.Exists(dir)) 
 				{
 					var baseFileName = Path.GetFileName(fullPath);
 
-					var files = Directory.GetFiles(directory, GetWildcardPatternForFile(baseFileName));
+                    var files = Directory.GetFiles(dir, GetWildcardPatternForFile(baseFileName));
 	
 					if (files != null)
 					{
-						for (var i = 0; i < files.Length; i++) 
+                        for (int i = 0; i < files.Length; i++) 
 						{
 							var curFileName = Path.GetFileName(files[i]);
 							if (curFileName.StartsWith(Path.GetFileNameWithoutExtension(baseFileName)))
@@ -820,7 +842,9 @@ namespace log4net.Appender
 						}
 					}
 				}
+                return dir;
 			}
+
 			LogLog.Debug(declaringType, "Searched for existing files in ["+directory+"]");
 			return alFiles;
 		}
@@ -835,6 +859,7 @@ namespace log4net.Appender
 				if (FileExists(m_baseFileName)) 
 				{
 					DateTime last;
+#if !(NETSTANDARD || NETCOREAPP3_1_OR_GREATER)
 					using(SecurityContext.Impersonate(this)) {
 #if !NET_1_0 && !CLI_1_0 && !NETCF
                         if (DateTimeStrategy is UniversalDateTime)
@@ -849,8 +874,17 @@ namespace log4net.Appender
                         }
 #endif
                     }
+#else
+                    last = SecurityContext.Impersonate(
+                        () => 
+                            DateTimeStrategy is UniversalDateTime 
+                                ? System.IO.File.GetLastWriteTimeUtc(m_baseFileName)
+                                : System.IO.File.GetLastWriteTime(m_baseFileName)
+					
+                        );
+#endif
 					LogLog.Debug(declaringType, "["+last.ToString(m_datePattern,DateTimeFormatInfo.InvariantInfo)+"] vs. ["+m_now.ToString(m_datePattern,DateTimeFormatInfo.InvariantInfo)+"]");
-
+	
 					if (!(last.ToString(m_datePattern,DateTimeFormatInfo.InvariantInfo).Equals(m_now.ToString(m_datePattern, DateTimeFormatInfo.InvariantInfo)))) 
 					{
 						m_scheduledFilename = CombinePath(m_baseFileName, last.ToString(m_datePattern, DateTimeFormatInfo.InvariantInfo));
@@ -885,15 +919,16 @@ namespace log4net.Appender
 			{
 				return;
 			}
-
 			bool fileExists;
 			var fileName = GetNextOutputFileName(m_baseFileName);
-
+#if !(NETSTANDARD || NETCOREAPP3_1_OR_GREATER)
 			using(SecurityContext.Impersonate(this))
 			{
 				fileExists = System.IO.File.Exists(fileName);
 			}
-
+#else
+			fileExists = SecurityContext.Impersonate(() => System.IO.File.Exists(fileName));
+#endif
 			if (!fileExists)
 			{
 				return;
@@ -1145,6 +1180,7 @@ namespace log4net.Appender
 				SecurityContext = SecurityContextProvider.DefaultProvider.CreateSecurityContext(this);
 			}
 
+#if !(NETSTANDARD || NETCOREAPP3_1_OR_GREATER)			
 			using(SecurityContext.Impersonate(this))
 			{
 				// Must convert the FileAppender's m_filePath to an absolute path before we
@@ -1155,7 +1191,19 @@ namespace log4net.Appender
 				// Store fully qualified base file name
 				m_baseFileName = base.File;
 			}
+#else
+			SecurityContext.Impersonate(
+				() => {
+					// Must convert the FileAppender's m_filePath to an absolute path before we
+					// call ExistingInit(). This will be done by the base.ActivateOptions() but
+					// we need to duplicate that functionality here first.
+					base.File = ConvertToFullPath(base.File.Trim());
 
+					// Store fully qualified base file name
+					m_baseFileName = base.File;
+				}
+			);
+#endif
 #if !NETCF
 			// initialize the mutex that is used to lock rolling
 			m_mutexForRolling = new Mutex(false, m_baseFileName
@@ -1282,10 +1330,15 @@ namespace log4net.Appender
 				try
 				{
 					LogLog.Debug(declaringType, "Moving [" + fromFile + "] -> [" + toFile + "]");
-					using(SecurityContext.Impersonate(this))
+#if !(NETSTANDARD || NETCOREAPP3_1_OR_GREATER)
+                    using(SecurityContext.Impersonate(this))
 					{
 						System.IO.File.Move(fromFile, toFile);
 					}
+#else
+                    SecurityContext.Impersonate(
+                        () => { System.IO.File.Move(fromFile, toFile); });
+#endif
 				}
 				catch(Exception moveEx)
 				{
@@ -1310,10 +1363,14 @@ namespace log4net.Appender
 		/// </remarks>
 		protected bool FileExists(string path)
 		{
+#if !(NETSTANDARD || NETCOREAPP3_1_OR_GREATER)
 			using(SecurityContext.Impersonate(this))
 			{
 				return System.IO.File.Exists(path);
 			}
+#else
+            return SecurityContext.Impersonate(() => System.IO.File.Exists(path));
+#endif
 		}
   
 		/// <summary>
@@ -1341,10 +1398,15 @@ namespace log4net.Appender
 				var tempFileName = fileName + "." + Environment.TickCount + ".DeletePending";
 				try
 				{
+#if !(NETSTANDARD || NETCOREAPP3_1_OR_GREATER)
 					using(SecurityContext.Impersonate(this))
 					{
 						System.IO.File.Move(fileName, tempFileName);
 					}
+#else
+                    SecurityContext.Impersonate(
+                        () => { System.IO.File.Move(fileName, tempFileName); });
+#endif
 					fileToDelete = tempFileName;
 				}
 				catch(Exception moveEx)
@@ -1355,10 +1417,14 @@ namespace log4net.Appender
 				// Try to delete the file (either the original or the moved file)
 				try
 				{
+#if !(NETSTANDARD || NETCOREAPP3_1_OR_GREATER)
 					using(SecurityContext.Impersonate(this))
 					{
 						System.IO.File.Delete(fileToDelete);
 					}
+#else
+                    SecurityContext.Impersonate(() => { System.IO.File.Delete(fileToDelete); });
+#endif
 					LogLog.Debug(declaringType, "Deleted file [" + fileName + "]");
 				}
 				catch(Exception deleteEx)

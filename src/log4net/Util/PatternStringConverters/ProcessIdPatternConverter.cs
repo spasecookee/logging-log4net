@@ -43,7 +43,7 @@ namespace log4net.Util.PatternStringConverters
 		/// Write the current process ID to the output <paramref name="writer"/>.
 		/// </para>
 		/// </remarks>
-#if NET_4_0 || MONO_4_0 || NETSTANDARD
+#if NET_4_0 || MONO_4_0 || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
         [System.Security.SecuritySafeCritical]
 #endif
         protected override void Convert(TextWriter writer, object state) 

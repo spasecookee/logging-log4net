@@ -17,7 +17,7 @@
 //
 #endregion
 
-#if NET_4_5 || NETSTANDARD
+#if NET_4_5 || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 using System;
 using System.Threading.Tasks;
 using System.Linq;

@@ -18,13 +18,13 @@
 #endregion
 
 // netstandard doesn't support EventLog
-#if NET_2_0
+#if NET_2_0 || NETCOREAPP_3_1_OR_GREATER
 
 using System.Diagnostics;
-
+using System.Diagnostics.CodeAnalysis;
 using log4net.Appender;
 using log4net.Core;
-
+using log4net.Util;
 using NUnit.Framework;
 
 namespace log4net.Tests.Appender
@@ -42,11 +42,17 @@ namespace log4net.Tests.Appender
 		/// Verifies that for each event log level, the correct system
 		/// event log enumeration is returned
 		/// </summary>
-		[Test]
+		[Test][Platform(Include = "Win")]
+		[SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
 		public void TestGetEntryTypeForExistingApplicationName()
 		{
 			EventLogAppender eventAppender = new EventLogAppender();
             eventAppender.ApplicationName = "Winlogon";
+            eventAppender.LogName = "System";
+            eventAppender.SecurityContext = new WindowsSecurityContext() {
+                Credentials = WindowsSecurityContext.ImpersonationMode.Process
+            };
+            
 			eventAppender.ActivateOptions();
 
 			Assert.AreEqual(
@@ -82,10 +88,15 @@ namespace log4net.Tests.Appender
         /// ActivateOption tries to create an event source if it doesn't exist but this is going to fail on more modern Windows versions unless the code is run with local administrator privileges.
         /// </summary>
         [Test]
-	[Ignore("seems to require administrator privileges or a specific environent when run")]
+	//[Ignore("seems to require administrator privileges or a specific environent when run")]
         public void ActivateOptionsDisablesAppenderIfSourceDoesntExist()
         {
             EventLogAppender eventAppender = new EventLogAppender();
+            eventAppender.SecurityContext = new WindowsSecurityContext()
+            {
+                Credentials = WindowsSecurityContext.ImpersonationMode.Process
+            };
+
             eventAppender.ActivateOptions();
             Assert.AreEqual(Level.Off, eventAppender.Threshold);
         }

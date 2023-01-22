@@ -57,7 +57,7 @@ namespace log4net.Util
 		private NullSecurityContext()
 		{
 		}
-
+#if !NETSTANDARD1_3_OR_GREATER && !NETCOREAPP3_1_OR_GREATER
 		/// <summary>
 		/// Impersonate this SecurityContext
 		/// </summary>
@@ -72,5 +72,18 @@ namespace log4net.Util
 		{
 			return null;
 		}
+#else
+        /// <inheritdoc />
+        public override void Impersonate(Action code) {
+	        if (code == null) throw new ArgumentNullException(nameof(code));
+            code.Invoke();
+        }
+
+        /// <inheritdoc />
+        public override T Impersonate<T>(Func<T> code) {
+	        if (code == null) throw new ArgumentNullException(nameof(code));
+            return code.Invoke();
+        }
+#endif
 	}
 }

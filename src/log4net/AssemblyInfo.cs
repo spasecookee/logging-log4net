@@ -106,7 +106,7 @@ using System.Runtime.CompilerServices;
 #elif (SSCLI_1_0)
 [assembly: AssemblyInformationalVersionAttribute("2.0.15.0-SSCLI 1.0")]
 [assembly: AssemblyTitle("Apache log4net for Shared Source CLI 1.0")]
-#elif (NET)
+#elif (NETFRAMEWORK)
 [assembly: AssemblyInformationalVersionAttribute("2.0.15.0-.NET")]
 [assembly: AssemblyTitle("Apache log4net for .NET Framework")]
 #elif (NETSTANDARD1_3)
@@ -115,6 +115,12 @@ using System.Runtime.CompilerServices;
 #elif (NETSTANDARD2_0)
 [assembly: AssemblyInformationalVersionAttribute("2.0.15.0-.NET Standard 2.0")]
 [assembly: AssemblyTitle("Apache log4net for .NET Standard 2.0")]
+#elif (NETCOREAPP3_1)
+[assembly: AssemblyInformationalVersionAttribute("2.0.15.0-.NET Core 3.1")]
+[assembly: AssemblyTitle("Apache log4net for .NET Core 3.1")]
+#elif (NET6_0)
+[assembly: AssemblyInformationalVersionAttribute("2.0.15.0-.NET 6.0")]
+[assembly: AssemblyTitle("Apache log4net for .NET 6")]
 #elif (NETCF)
 [assembly: AssemblyInformationalVersionAttribute("2.0.15.0-.NETCF")]
 [assembly: AssemblyTitle("Apache log4net for .NET Compact Framework")]

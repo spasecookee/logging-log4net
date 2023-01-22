@@ -74,15 +74,15 @@ namespace log4net.Appender
 		/// Write the logging event to the output debug string API
 		/// </para>
 		/// </remarks>
-#if NET_4_0 || MONO_4_0 || NETSTANDARD
+#if NET_4_0 || MONO_4_0 || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 		[System.Security.SecuritySafeCritical]
 #endif
-#if !NETCF && !NETSTANDARD1_3
+#if !NETCF && !NETSTANDARD1_3_OR_GREATER && !NETCOREAPP3_1_OR_GREATER
 		[System.Security.Permissions.SecurityPermission(System.Security.Permissions.SecurityAction.Demand, UnmanagedCode = true)]
 #endif
 		protected override void Append(LoggingEvent loggingEvent) 
 		{
-#if NETSTANDARD
+#if  NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
 				throw new System.PlatformNotSupportedException("OutputDebugString is only available on Windows");
@@ -119,7 +119,7 @@ namespace log4net.Appender
 		/// Stub for OutputDebugString native method
 		/// </para>
 		/// </remarks>
-#if NETCF || NETSTANDARD
+#if NETCF || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 		[DllImport("CoreDll.dll")]
 #else
 		[DllImport("Kernel32.dll")]

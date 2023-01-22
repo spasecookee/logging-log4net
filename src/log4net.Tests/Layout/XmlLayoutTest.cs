@@ -80,27 +80,41 @@ namespace log4net.Tests.Layout
 			return ed;
 		}
 
-		private static string CreateEventNode(string message)
+		private static string CreateEventNode(string message) 
 		{
-			return String.Format("<event logger=\"TestLogger\" timestamp=\"{0}\" level=\"INFO\" thread=\"TestThread\" domain=\"Tests\" identity=\"TestRunner\" username=\"TestRunner\"><message>{1}</message></event>" + Environment.NewLine,
-#if NET_2_0 || MONO_2_0 || MONO_3_5 || MONO_4_0 || NETSTANDARD
-			                     XmlConvert.ToString(DateTime.Today, XmlDateTimeSerializationMode.Local),
+			string prefix = string.Empty;
+			string ns = string.Empty;
+			string dateTime = string.Empty;
+#if NETSTANDARD || NETCOREAPP3_1_OR_GREATER
+			prefix = "log4net:";
+			ns = " xmlns:log4net=\"http://logging.apache.org/log4net/schemas/log4net-events-1.2\"";
+#endif		
+#if NET_2_0 || MONO_2_0 || MONO_3_5 || MONO_4_0 || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
+			dateTime = XmlConvert.ToString(DateTime.Today, XmlDateTimeSerializationMode.Local);
 #else
-			                     XmlConvert.ToString(DateTime.Today),
+			dateTime = XmlConvert.ToString(DateTime.Today);
 #endif
-			                     message);
+			return String.Format("<{2}event logger=\"TestLogger\" timestamp=\"{0}\" level=\"INFO\" thread=\"TestThread\" domain=\"Tests\" identity=\"TestRunner\" username=\"TestRunner\"{3}><{2}message>{1}</{2}message></{2}event>" + Environment.NewLine,
+			                    dateTime, message, prefix, ns);
 		}
 
 		private static string CreateEventNode(string key, string value)
 		{
-			return String.Format("<event logger=\"TestLogger\" timestamp=\"{0}\" level=\"INFO\" thread=\"TestThread\" domain=\"Tests\" identity=\"TestRunner\" username=\"TestRunner\"><message>Test message</message><properties><data name=\"{1}\" value=\"{2}\" /></properties></event>" + Environment.NewLine,
-#if NET_2_0 || MONO_2_0 || MONO_3_5 || MONO_4_0 || NETSTANDARD
-			                     XmlConvert.ToString(DateTime.Today, XmlDateTimeSerializationMode.Local),
-#else
-			                     XmlConvert.ToString(DateTime.Today),
+			string prefix = string.Empty;
+			string ns = string.Empty;
+			string dateTime = string.Empty;
+#if NETSTANDARD || NETCOREAPP3_1_OR_GREATER
+			prefix = "log4net:";
+			ns = " xmlns:log4net=\"http://logging.apache.org/log4net/schemas/log4net-events-1.2\"";
 #endif
-			                     key,
-			                     value);
+#if NET_2_0 || MONO_2_0 || MONO_3_5 || MONO_4_0 || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
+			dateTime = XmlConvert.ToString(DateTime.Today, XmlDateTimeSerializationMode.Local);
+#else
+			dateTime = XmlConvert.ToString(DateTime.Today);
+#endif
+
+			return String.Format("<{3}event logger=\"TestLogger\" timestamp=\"{0}\" level=\"INFO\" thread=\"TestThread\" domain=\"Tests\" identity=\"TestRunner\" username=\"TestRunner\"{4}><{3}message>Test message</{3}message><{3}properties><{3}data name=\"{1}\" value=\"{2}\" /></{3}properties></{3}event>" + Environment.NewLine,
+			                     dateTime, key, value, prefix, ns);
 		}
 
 		[Test]
@@ -111,9 +125,7 @@ namespace log4net.Tests.Layout
 			LoggingEventData evt = CreateBaseEvent();
 
 			layout.Format(writer, new LoggingEvent(evt));
-
 			string expected = CreateEventNode("Test message");
-
 			Assert.AreEqual(expected, writer.ToString());
 		}
 
@@ -305,7 +317,7 @@ namespace log4net.Tests.Layout
 			Assert.AreEqual(expected, stringAppender.GetString());
 		}
 
-#if NET_4_0 || MONO_4_0 || NETSTANDARD
+#if NET_4_0 || MONO_4_0 || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
         [Test]
         public void BracketsInStackTracesKeepLogWellFormed() {
             XmlLayout layout = new XmlLayout();
@@ -353,7 +365,15 @@ namespace log4net.Tests.Layout
             var startOfExceptionText = log.IndexOf("<exception>", StringComparison.Ordinal) + 11;
             var endOfExceptionText = log.IndexOf("</exception>", StringComparison.Ordinal);
 #else
-            var startOfExceptionText = log.IndexOf("<exception>", StringComparison.InvariantCulture) + 11;
+#if NETSTANDARD || NETCOREAPP3_1_OR_GREATER
+	        Assert.That(log, Does.Contain("<log4net:exception>"));
+            var startOfExceptionText = log.IndexOf("<log4net:exception>", StringComparison.InvariantCulture) + "<log4net:exception>".Length;
+            Assert.That(log, Does.Contain("</log4net:exception>"));
+            var endOfExceptionText = log.IndexOf("</log4net:exception>", StringComparison.InvariantCulture);
+#else
+            Assert.That(log, Does.Contain("<exception>"));
+            var startOfExceptionText = log.IndexOf("<exception>", StringComparison.InvariantCulture) + "<exception>".Length;
+            Assert.That(log, Does.Contain("</exception>"));
             var endOfExceptionText = log.IndexOf("</exception>", StringComparison.InvariantCulture);
 #endif
             var sub = log.Substring(startOfExceptionText, endOfExceptionText - startOfExceptionText);
@@ -367,6 +387,7 @@ namespace log4net.Tests.Layout
                 StringAssert.DoesNotContain(">", sub);
             }
         }
+#endif
 #endif
 	}
 }

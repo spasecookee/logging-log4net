@@ -114,10 +114,10 @@ namespace log4net.Util
 		/// native Win32 <c>FormatMessage</c> function.
 		/// </para>
 		/// </remarks>
-#if NET_4_0 || MONO_4_0 || NETSTANDARD
+#if NET_4_0 || MONO_4_0 || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
         [System.Security.SecuritySafeCritical]
 #endif
-#if !NETCF && !NETSTANDARD1_3
+#if !NETCF && !NETSTANDARD1_3_OR_GREATER && !NETCOREAPP3_1_OR_GREATER
         [System.Security.Permissions.SecurityPermission(System.Security.Permissions.SecurityAction.Demand, UnmanagedCode = true)]
 #endif
         public static NativeError GetLastError() 
@@ -158,10 +158,10 @@ namespace log4net.Util
 		/// using the native <c>FormatMessage</c> function.
 		/// </para>
 		/// </remarks>
-#if NET_4_0 || MONO_4_0 || NETSTANDARD
+#if NET_4_0 || MONO_4_0 || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
         [System.Security.SecuritySafeCritical]
 #endif
-#if !NETCF && !NETSTANDARD1_3
+#if !NETCF && !NETSTANDARD1_3_OR_GREATER && !NETCOREAPP3_1_OR_GREATER
         [System.Security.Permissions.SecurityPermission(System.Security.Permissions.SecurityAction.Demand, UnmanagedCode = true)]
 #endif
         public static string GetErrorMessage(int messageId) 
@@ -262,7 +262,7 @@ namespace log4net.Util
 		/// call <see cref="M:Marshal.GetLastWin32Error()" />.
 		/// </para>
 		/// </returns>
-#if NETCF || NETSTANDARD
+#if NETCF || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 		[DllImport("CoreDll.dll", SetLastError=true, CharSet=CharSet.Unicode)]
 #else
 		[DllImport("Kernel32.dll", SetLastError=true, CharSet=CharSet.Auto)]

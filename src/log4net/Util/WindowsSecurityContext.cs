@@ -17,7 +17,7 @@
 //
 #endregion
 
-#if NET_2_0
+#if NET_2_0 || NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_0_OR_GREATER
 // .NET Compact Framework 1.0 has no support for WindowsIdentity
 #if !NETCF 
 // MONO 1.0 has no support for Win32 Logon APIs
@@ -28,11 +28,13 @@
 #if !CLI_1_0
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Security.Permissions;
 
 using log4net.Core;
+using Microsoft.Win32.SafeHandles;
 
 namespace log4net.Util
 {
@@ -49,6 +51,8 @@ namespace log4net.Util
 	/// using username, domain name and password or to revert to the process credentials.
 	/// </para>
 	/// </remarks>
+	
+	[SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
 	public class WindowsSecurityContext : SecurityContext, IOptionHandler
 	{
 		/// <summary>
@@ -232,6 +236,7 @@ namespace log4net.Util
 
 		#endregion
 
+#if !NETSTANDARD1_3_OR_GREATER && !NETCOREAPP3_1_OR_GREATER
 		/// <summary>
 		/// Impersonate the Windows account specified by the <see cref="UserName"/> and <see cref="DomainName"/> properties.
 		/// </summary>
@@ -262,7 +267,34 @@ namespace log4net.Util
 			}
 			return null;
 		}
+#else
+        /// <inheritdoc />
+        public override void Impersonate(Action code) {
+            var token = safeAccessTokenHandle();
+            WindowsIdentity.RunImpersonated(token, code);
+        }
 
+        /// <inheritdoc />
+        public override T Impersonate<T>(Func<T> code) {
+            var token = safeAccessTokenHandle();
+            return WindowsIdentity.RunImpersonated(token, code);
+        }
+
+        private SafeAccessTokenHandle safeAccessTokenHandle() {
+            WindowsIdentity user = null;
+            if(m_impersonationMode == ImpersonationMode.User) {
+                if(m_identity != null) {
+                    user = m_identity;
+                }
+            }
+            else if(m_impersonationMode == ImpersonationMode.Process) {
+                user = WindowsIdentity.GetCurrent(false);
+            }
+
+            var token = user?.AccessToken;
+            return token;
+        }
+#endif
 		/// <summary>
 		/// Create a <see cref="WindowsIdentity"/> given the userName, domainName and password.
 		/// </summary>
@@ -276,10 +308,12 @@ namespace log4net.Util
 		/// token is used to initialize the WindowsIdentity.
 		/// </para>
 		/// </remarks>
-#if NET_4_0 || MONO_4_0
+#if NET_4_0 || MONO_4_0 || NETSTANDARD1_3_OR_GREATER || NETCOREAPP3_1_OR_GREATER
         [System.Security.SecuritySafeCritical]
 #endif
+#if !NETSTANDARD1_3_OR_GREATER && !NETCOREAPP3_1_OR_GREATER
         [System.Security.Permissions.SecurityPermission(System.Security.Permissions.SecurityAction.Demand, UnmanagedCode = true)]
+#endif
         private static WindowsIdentity LogonUser(string userName, string domainName, string password)
 		{
 			const int LOGON32_PROVIDER_DEFAULT = 0;
@@ -333,7 +367,7 @@ namespace log4net.Util
 		private static extern bool DuplicateToken(IntPtr ExistingTokenHandle, int SECURITY_IMPERSONATION_LEVEL, ref IntPtr DuplicateTokenHandle);
 
 		#endregion
-
+#if !NETSTANDARD1_3_OR_GREATER && !NETCOREAPP3_1_OR_GREATER
 		#region DisposableImpersonationContext class
 
 		/// <summary>
@@ -378,6 +412,7 @@ namespace log4net.Util
 		}
 
 		#endregion
+#endif
 	}
 }
 

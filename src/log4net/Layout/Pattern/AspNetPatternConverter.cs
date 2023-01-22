@@ -1,4 +1,4 @@
-#if NET_2_0
+#if NET_2_0 || NETCOREAPP3_1_OR_GREATER
 #region Apache License
 //
 // Licensed to the Apache Software Foundation (ASF) under one or more 
@@ -23,12 +23,34 @@
 #if !NETCF && !SSCLI && !CLIENT_PROFILE
 
 using System.IO;
+#if !( NETCOREAPP3_1_OR_GREATER)
 using System.Web;
+#endif
 using log4net.Core;
 using log4net.Util;
+#if NETCOREAPP3_1_OR_GREATER
+using System;
+using Microsoft.AspNetCore.Http;
+#endif
 
 namespace log4net.Layout.Pattern
 {
+#if NETCOREAPP3_1_OR_GREATER
+    //.Net standard/core does not have direct access to the current HTTP Context, so an HTTP Context Accessor needs to be injected
+    //This is only necessary to facilitate AspNetContext/Request layouts in .NetStandard/Core
+    //TODO Move this class to a more appropriate location
+    public static class InternalHttpContext {
+        [CLSCompliant(false)]
+        public static IHttpContextAccessor HttpContextAccessor { get; set; }
+        [CLSCompliant(true)]
+        public static void SetHttpContextAccessor(object httpContextAccessor) {
+            if(httpContextAccessor is IHttpContextAccessor accessor) {
+                HttpContextAccessor = accessor;
+            }
+        }
+    }
+
+#endif
 	/// <summary>
 	/// Abstract class that provides access to the current HttpContext (<see cref="HttpContext.Current" />) that 
 	/// derived classes need.
@@ -40,8 +62,23 @@ namespace log4net.Layout.Pattern
 	/// <author>Ron Grabowski</author>
 	internal abstract class AspNetPatternLayoutConverter : PatternLayoutConverter
 	{
+#if NETCOREAPP3_1_OR_GREATER
+        private IHttpContextAccessor HttpContextAccessor => InternalHttpContext.HttpContextAccessor;
+#endif
+
 		protected override void Convert(TextWriter writer, LoggingEvent loggingEvent)
 		{
+#if NETCOREAPP3_1_OR_GREATER
+            if (HttpContextAccessor?.HttpContext == null)
+            {
+                writer.Write(SystemInfo.NotAvailableText);
+            }
+            else
+            {
+                Convert(writer, loggingEvent, HttpContextAccessor.HttpContext);
+            }
+#else
+
 			if (HttpContext.Current == null)
 			{
 				writer.Write(SystemInfo.NotAvailableText);
@@ -50,6 +87,7 @@ namespace log4net.Layout.Pattern
 			{
 				Convert(writer, loggingEvent, HttpContext.Current);
 			}
+#endif
 		}
 
 		/// <summary>

@@ -21,6 +21,7 @@
 
 using System;
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Security;
@@ -866,6 +867,7 @@ namespace log4net.Core
 #if (NETCF || SSCLI || NETSTANDARD1_3)
 #else
         private string _cachedWindowsIdentityUserName;
+        [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
         private static string TryReadWindowsIdentityUserName()
         {
             using var identity = WindowsIdentity.GetCurrent();
@@ -1047,10 +1049,10 @@ namespace log4net.Core
         /// is to be used outside that method.
         /// </para>
         /// </remarks>
-#if NET_4_0 || MONO_4_0 || NETSTANDARD
+#if NET_4_0 || MONO_4_0 || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
         [System.Security.SecurityCritical]
 #endif
-#if !NETCF && !NETSTANDARD1_3
+#if !NETCF && !NETSTANDARD1_3_OR_GREATER && !NETCOREAPP3_1_OR_GREATER
         [System.Security.Permissions.SecurityPermission(System.Security.Permissions.SecurityAction.Demand,
             SerializationFormatter = true)]
 #endif

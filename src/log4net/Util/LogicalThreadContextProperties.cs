@@ -21,11 +21,11 @@
 #if !NETCF
 
 using System;
-#if !NETSTANDARD
+#if !NETSTANDARD && !NETCOREAPP3_1_OR_GREATER
 using System.Runtime.Remoting.Messaging;
 #endif
 using System.Security;
-#if NETSTANDARD
+#if NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 using System.Threading;
 #endif
 
@@ -59,7 +59,7 @@ namespace log4net.Util
 	/// <author>Nicko Cadell</author>
 	public sealed class LogicalThreadContextProperties : ContextPropertiesBase
 	{
-#if NETSTANDARD
+#if NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 		private static readonly AsyncLocal<PropertiesDictionary> AsyncLocalDictionary = new AsyncLocal<PropertiesDictionary>();
 #else
 		private const string c_SlotName = "log4net.Util.LogicalThreadContextProperties";
@@ -225,12 +225,12 @@ namespace log4net.Util
 		/// security link demand, therfore we must put the method call in a seperate method
 		/// that we can wrap in an exception handler.
 		/// </remarks>
-#if NET_4_0 || MONO_4_0 || NETSTANDARD
+#if NET_4_0 || MONO_4_0 || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
         [System.Security.SecuritySafeCritical]
 #endif
         private static PropertiesDictionary GetLogicalProperties()
 		{
-#if NETSTANDARD
+#if NETSTANDARD || NETCOREAPP3_1_OR_GREATER
             return AsyncLocalDictionary.Value;
 #elif NET_2_0 || MONO_2_0 || MONO_3_5 || MONO_4_0
             return CallContext.LogicalGetData(c_SlotName) as PropertiesDictionary;
@@ -248,12 +248,12 @@ namespace log4net.Util
 		/// security link demand, therfore we must put the method call in a seperate method
 		/// that we can wrap in an exception handler.
 		/// </remarks>
-#if NET_4_0 || MONO_4_0 || NETSTANDARD
+#if NET_4_0 || MONO_4_0 || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
         [System.Security.SecuritySafeCritical]
 #endif
         private static void SetLogicalProperties(PropertiesDictionary properties)
 		{
-#if NETSTANDARD
+#if NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 			AsyncLocalDictionary.Value = properties;
 #elif NET_2_0 || MONO_2_0 || MONO_3_5 || MONO_4_0
 			CallContext.LogicalSetData(c_SlotName, properties);

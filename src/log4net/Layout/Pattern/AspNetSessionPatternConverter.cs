@@ -1,4 +1,4 @@
-#if NET_2_0
+#if NET_2_0 || NETCOREAPP3_1_OR_GREATER
 #region Apache License
 //
 // Licensed to the Apache Software Foundation (ASF) under one or more 
@@ -23,7 +23,11 @@
 #if !NETCF && !SSCLI && !CLIENT_PROFILE
 
 using System.IO;
+#if NETCOREAPP3_1_OR_GREATER
+using Microsoft.AspNetCore.Http;
+#else
 using System.Web;
+#endif
 using log4net.Core;
 using log4net.Util;
 
@@ -56,12 +60,24 @@ namespace log4net.Layout.Pattern
 		/// </remarks>
 		protected override void Convert(TextWriter writer, LoggingEvent loggingEvent, HttpContext httpContext)
 		{
+#if NETCOREAPP3_1_OR_GREATER
+            if (httpContext.Session.IsAvailable)
+#else
 			if (httpContext.Session != null)
+#endif
 			{
-				if (Option != null)
+#if NET_2_0
+				if (Option != null) 
 				{
 					WriteObject(writer, loggingEvent.Repository, httpContext.Session.Contents[Option]);
 				}
+#else
+				if (Option != null && httpContext.Session.TryGetValue(Option, out var value))
+				{
+					WriteObject(writer, loggingEvent.Repository, value);
+				}
+#endif
+				
 				else
 				{
 					WriteObject(writer, loggingEvent.Repository, httpContext.Session);

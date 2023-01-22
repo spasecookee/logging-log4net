@@ -23,7 +23,7 @@ using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 using System.IO;
-#if NETSTANDARD
+#if NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 using System.Threading.Tasks;
 #endif
 
@@ -311,7 +311,7 @@ namespace log4net.Appender
 
 						try
 						{
-#if NET_4_0 || NETSTANDARD
+#if NET_4_0 || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 							m_socket.Dispose();
 #else
 							m_socket.Close();
@@ -346,7 +346,7 @@ namespace log4net.Appender
 
 			private void AcceptConnection()
 			{
-#if NETSTANDARD
+#if NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 				m_serverSocket.AcceptAsync().ContinueWith(OnConnect, TaskScheduler.Default);
 #else
 				m_serverSocket.BeginAccept(new AsyncCallback(OnConnect), null);
@@ -433,7 +433,7 @@ namespace log4net.Appender
 			}
 			
 
-#if NETSTANDARD
+#if NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 			private void OnConnect(Task<Socket> acceptTask)
 #else
 			/// <summary>
@@ -451,7 +451,7 @@ namespace log4net.Appender
 			{
 				try
 				{
-#if NETSTANDARD
+#if NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 					Socket socket = acceptTask.GetAwaiter().GetResult();
 #else
 					// Block until a client connects

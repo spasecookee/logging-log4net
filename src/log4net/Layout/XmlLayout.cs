@@ -216,15 +216,15 @@ namespace log4net.Layout
 		/// </remarks>
 		protected override void FormatXml(XmlWriter writer, LoggingEvent loggingEvent)
 		{
-			#if NETSTANDARD
-			writer.WriteStartElement(m_prefix, ELM_EVENT, m_prefix);
+			#if NETSTANDARD || NETCOREAPP3_1_OR_GREATER
+			writer.WriteStartElement(m_prefix, ELM_EVENT, "http://logging.apache.org/log4net/schemas/log4net-events-1.2");
 			// writer.WriteAttributeString("xmlns", "log4net", null, "http://logging.apache.org/log4net/schemas/log4net-events-1.2");
 			#else
 			writer.WriteStartElement(m_elmEvent);
 			#endif
 			writer.WriteAttributeString(ATTR_LOGGER, loggingEvent.LoggerName);
 
-#if NET_2_0 || NETCF_2_0 || MONO_2_0 || NETSTANDARD
+#if NET_2_0 || NETCF_2_0 || MONO_2_0 || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 			writer.WriteAttributeString(ATTR_TIMESTAMP, XmlConvert.ToString(loggingEvent.TimeStamp, XmlDateTimeSerializationMode.Local));
 #else
 			writer.WriteAttributeString(ATTR_TIMESTAMP, XmlConvert.ToString(loggingEvent.TimeStamp));
@@ -247,8 +247,8 @@ namespace log4net.Layout
 			}
     
 			// Append the message text
-			#if NETSTANDARD
-			writer.WriteStartElement(m_prefix, ELM_MESSAGE, m_prefix);
+			#if NETSTANDARD || NETCOREAPP3_1_OR_GREATER
+			writer.WriteStartElement(m_prefix, ELM_MESSAGE, "http://logging.apache.org/log4net/schemas/log4net-events-1.2");
 			#else
 			writer.WriteStartElement(m_elmMessage);
 			#endif
@@ -269,15 +269,15 @@ namespace log4net.Layout
 			// Append the properties text
 			if (properties.Count > 0)
 			{
-				#if NETSTANDARD
-				writer.WriteStartElement(m_prefix, ELM_PROPERTIES, m_prefix);
+				#if NETSTANDARD || NETCOREAPP3_1_OR_GREATER
+				writer.WriteStartElement(m_prefix, ELM_PROPERTIES, "http://logging.apache.org/log4net/schemas/log4net-events-1.2");
 				#else
 				writer.WriteStartElement(m_elmProperties);
 				#endif
 				foreach(System.Collections.DictionaryEntry entry in properties)
 				{
-					#if NETSTANDARD
-					writer.WriteStartElement(m_prefix, ELM_DATA, m_prefix);
+					#if NETSTANDARD || NETCOREAPP3_1_OR_GREATER
+					writer.WriteStartElement(m_prefix, ELM_DATA, "http://logging.apache.org/log4net/schemas/log4net-events-1.2");
 					#else
 					writer.WriteStartElement(m_elmData);
 					#endif
@@ -305,8 +305,8 @@ namespace log4net.Layout
 			if (exceptionStr != null && exceptionStr.Length > 0)
 			{
 				// Append the stack trace line
-				#if NETSTANDARD
-				writer.WriteStartElement(m_prefix, ELM_EXCEPTION, m_prefix);
+				#if NETSTANDARD || NETCOREAPP3_1_OR_GREATER
+				writer.WriteStartElement(m_prefix, ELM_EXCEPTION, "http://logging.apache.org/log4net/schemas/log4net-events-1.2");
 				#else
 				writer.WriteStartElement(m_elmException);
 				#endif
@@ -318,7 +318,7 @@ namespace log4net.Layout
 			{ 
 				LocationInfo locationInfo = loggingEvent.LocationInformation;
 
-				#if NETSTANDARD
+				#if NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 				writer.WriteStartElement(m_prefix, ELM_LOCATION, m_prefix);
 				#else
 				writer.WriteStartElement(m_elmLocation);
@@ -341,7 +341,6 @@ namespace log4net.Layout
 		/// The prefix to use for all generated element names
 		/// </summary>
 		private string m_prefix = PREFIX;
-
 		private string m_elmEvent = ELM_EVENT;
 		private string m_elmMessage = ELM_MESSAGE;
 		private string m_elmData = ELM_DATA;

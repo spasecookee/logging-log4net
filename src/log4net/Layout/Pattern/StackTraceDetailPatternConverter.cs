@@ -18,7 +18,7 @@
  * under the License.
  *
 */
-#if !NETCF && (NET_2_0 || NETSTANDARD2_0)
+#if !NETCF && (NET_2_0 || NETSTANDARD2_0 || NETCOREAPP3_1_OR_GREATER)
 
 using System;
 using System.Text;

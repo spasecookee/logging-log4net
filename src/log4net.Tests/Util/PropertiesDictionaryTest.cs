@@ -21,7 +21,11 @@
 
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
-
+#if NETCOREAPP3_1_OR_GREATER
+using System.Collections.Generic;
+using System.Text.Json.Serialization;
+using System.Text.Json;
+#endif
 using log4net.Util;
 
 using NUnit.Framework;
@@ -50,20 +54,29 @@ namespace log4net.Tests.Util
 			Assert.AreEqual(10, pd.Count, "Dictionary should have 10 items");
 
 			// Serialize the properties into a memory stream
+#if NETCOREAPP3_1_OR_GREATER
+			var json = System.Text.Json.JsonSerializer.Serialize(pd);
+#else
 			BinaryFormatter formatter = new BinaryFormatter();
 			MemoryStream memory = new MemoryStream();
 			formatter.Serialize(memory, pd);
-
+#endif			
+			
 			// Deserialize the stream into a new properties dictionary
+#if NETCOREAPP3_1_OR_GREATER
+			var pd2 = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string,int>>(json);
+#else
 			memory.Position = 0;
 			PropertiesDictionary pd2 = (PropertiesDictionary)formatter.Deserialize(memory);
-
+#endif			
 			Assert.AreEqual(10, pd2.Count, "Deserialized Dictionary should have 10 items");
 
 			foreach(string key in pd.GetKeys())
 			{
 				Assert.AreEqual(pd[key], pd2[key], "Check Value Persisted for key [{0}]", key);
-			}
+			}				
+			
+
 		}
 	}
 }

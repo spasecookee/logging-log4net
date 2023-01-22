@@ -18,7 +18,7 @@
  *
 */
 
-#if NET_2_0
+#if NET_2_0 || NETCOREAPP3_1_OR_GREATER
 
 using System;
 using System.Diagnostics;
@@ -38,8 +38,12 @@ namespace log4net.Tests.Appender
         public void NullCategoryTest()
         {
             CategoryTraceListener categoryTraceListener = new CategoryTraceListener();
+#if NETCOREAPP3_1_OR_GREATER
+            //Debug.Listeners does not exist in netcoreapp and netstandard
+            Trace.Listeners.Add(categoryTraceListener);
+#else
             Debug.Listeners.Add(categoryTraceListener);
-
+#endif
             ILoggerRepository rep = LogManager.CreateRepository(Guid.NewGuid().ToString());
 
             DebugAppender debugAppender = new DebugAppender();
@@ -62,15 +66,24 @@ namespace log4net.Tests.Appender
 
             Assert.IsFalse(testErrHandler.ErrorOccured);
 
+#if NETCOREAPP3_1_OR_GREATER
+            //Debug.Listeners does not exist in netcoreapp and netstandard
+            Trace.Listeners.Remove(categoryTraceListener);
+#else
             Debug.Listeners.Remove(categoryTraceListener);
+#endif
         }
 
         [Test]
         public void EmptyStringCategoryTest()
         {
             CategoryTraceListener categoryTraceListener = new CategoryTraceListener();
+#if NETCOREAPP3_1_OR_GREATER
+            //Debug.Listeners does not exist in netcoreapp and netstandard
+            Trace.Listeners.Add(categoryTraceListener);
+#else
             Debug.Listeners.Add(categoryTraceListener);
-
+#endif
             ILoggerRepository rep = LogManager.CreateRepository(Guid.NewGuid().ToString());
 
             DebugAppender debugAppender = new DebugAppender();
@@ -88,15 +101,24 @@ namespace log4net.Tests.Appender
                 null,
                 categoryTraceListener.Category);
 
+#if NETCOREAPP3_1_OR_GREATER
+            //Debug.Listeners does not exist in netcoreapp and netstandard
+            Trace.Listeners.Remove(categoryTraceListener);
+#else
             Debug.Listeners.Remove(categoryTraceListener);
+#endif
         }
 
         [Test]
         public void DefaultCategoryTest()
         {
             CategoryTraceListener categoryTraceListener = new CategoryTraceListener();
+#if NETCOREAPP3_1_OR_GREATER
+            //Debug.Listeners does not exist in netcoreapp and netstandard
+            Trace.Listeners.Add(categoryTraceListener);
+#else
             Debug.Listeners.Add(categoryTraceListener);
-
+#endif
             ILoggerRepository rep = LogManager.CreateRepository(Guid.NewGuid().ToString());
 
             DebugAppender debugAppender = new DebugAppender();
@@ -112,15 +134,24 @@ namespace log4net.Tests.Appender
                 GetType().ToString(),
                 categoryTraceListener.Category);
 
+#if NETCOREAPP3_1_OR_GREATER
+            //Debug.Listeners does not exist in netcoreapp and netstandard
+            Trace.Listeners.Remove(categoryTraceListener);
+#else
             Debug.Listeners.Remove(categoryTraceListener);
+#endif
         }
 
         [Test]
         public void MethodNameCategoryTest()
         {
             CategoryTraceListener categoryTraceListener = new CategoryTraceListener();
+#if NETCOREAPP3_1_OR_GREATER
+            //Debug.Listeners does not exist in netcoreapp and netstandard
+            Trace.Listeners.Add(categoryTraceListener);
+#else
             Debug.Listeners.Add(categoryTraceListener);
-
+#endif
             ILoggerRepository rep = LogManager.CreateRepository(Guid.NewGuid().ToString());
 
             DebugAppender debugAppender = new DebugAppender();
@@ -139,7 +170,12 @@ namespace log4net.Tests.Appender
                 System.Reflection.MethodInfo.GetCurrentMethod().Name,
                 categoryTraceListener.Category);
 
-            Debug.Listeners.Remove(categoryTraceListener);
+#if NETCOREAPP3_1_OR_GREATER
+            //Debug.Listeners does not exist in netcoreapp and netstandard
+            Trace.Listeners.Add(categoryTraceListener);
+#else
+            Debug.Listeners.Add(categoryTraceListener);
+#endif
         }
 
         private class TestErrorHandler : IErrorHandler

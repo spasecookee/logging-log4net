@@ -767,12 +767,15 @@ namespace log4net.Appender
 				resolvedConnectionString = ResolveConnectionString(out connectionStringContext);
 
 				Connection = CreateConnection(ResolveConnectionType(), resolvedConnectionString);
-
+#if !NETSTANDARD1_3_OR_GREATER && !NETCOREAPP3_1_OR_GREATER
 				using (SecurityContext.Impersonate(this))
 				{
 					// Open the database connection
 					Connection.Open();
 				}
+#else
+                SecurityContext.Impersonate(Connection.Open);
+#endif
 			}
 			catch (Exception e)
 			{

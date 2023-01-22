@@ -1,4 +1,4 @@
-#if NET_2_0
+#if NET_2_0 || NETCOREAPP3_1_OR_GREATER
 #region Apache License
 //
 // Licensed to the Apache Software Foundation (ASF) under one or more 
@@ -22,8 +22,15 @@
 // SSCLI 1.0 has no support for ASP.NET
 #if !NETCF && !SSCLI && !CLIENT_PROFILE
 
+using System;
 using System.IO;
+#if NETCOREAPP2_1_OR_GREATER
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Primitives;
+using System.Collections.Specialized;
+#else
 using System.Web;
+#endif
 using log4net.Core;
 using log4net.Util;
 
@@ -57,8 +64,14 @@ namespace log4net.Layout.Pattern
 		{
 		    HttpRequest request = null;
 		    try {
-			request = httpContext.Request;
-		    } catch (HttpException) {
+				request = httpContext.Request;
+		    }
+#if NETCOREAPP3_1_OR_GREATER
+		    catch (Exception)
+#else		    
+		    catch (HttpException)
+#endif
+		    {
 			// likely a case of running in IIS integrated mode
 			// when inside an Application_Start event.
 			// treat it like a case of the Request
@@ -67,6 +80,46 @@ namespace log4net.Layout.Pattern
 
 			if (request != null)
 			{
+#if NETSTANDARD2_0 || NETCOREAPP3_1_OR_GREATER
+				if (Option != null) {
+					StringValues value = new StringValues();
+					if(httpContext.Request.Query.ContainsKey(Option)) {
+						value = httpContext.Request.Query[Option];
+					}
+					else if(httpContext.Request.HasFormContentType && httpContext.Request.Form.ContainsKey(Option)) {
+						value = httpContext.Request.Form[Option];
+					}
+					else if(httpContext.Request.Cookies.ContainsKey(Option)) {
+						value = httpContext.Request.Cookies[Option];
+					}
+					WriteObject(writer, loggingEvent.Repository, value);
+				}
+				else
+				{
+					NameValueCollection nameValueCollection = new NameValueCollection();
+
+					foreach (var q in httpContext.Request.Query)
+					{
+						nameValueCollection.Add(q.Key, q.Value);
+					}
+
+					if(httpContext.Request.HasFormContentType) {
+						foreach (var f in httpContext.Request.Form)
+						{
+							if (string.IsNullOrEmpty(nameValueCollection.Get(f.Key)))
+								nameValueCollection.Add(f.Key, f.Value);
+						}
+					}
+
+					foreach (var c in httpContext.Request.Cookies)
+					{
+						if (string.IsNullOrEmpty(nameValueCollection.Get(c.Key)))
+							nameValueCollection.Add(c.Key, c.Value);
+					}
+					WriteObject(writer, loggingEvent.Repository, nameValueCollection);
+				}
+
+#else				
 				if (Option != null)
 				{
 					WriteObject(writer, loggingEvent.Repository, httpContext.Request.Params[Option]);
@@ -75,6 +128,7 @@ namespace log4net.Layout.Pattern
 				{
 					WriteObject(writer, loggingEvent.Repository, httpContext.Request.Params);
 				}
+#endif
 			}
 			else
 			{

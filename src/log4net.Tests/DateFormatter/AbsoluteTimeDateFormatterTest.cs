@@ -91,7 +91,7 @@ namespace log4net.Tests.DateFormatter
     {
         internal static int invocations = 0;
 
-        override protected void FormatDateWithoutMillis(DateTime dateToFormat,
+        protected override void FormatDateWithoutMillis(DateTime dateToFormat,
                                                         StringBuilder buffer)
         {
             invocations++;

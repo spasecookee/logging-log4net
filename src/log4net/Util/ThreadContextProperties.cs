@@ -42,7 +42,7 @@ namespace log4net.Util
 		/// <summary>
 		/// The thread local data slot to use to store a PropertiesDictionary.
 		/// </summary>
-		private readonly static LocalDataStoreSlot s_threadLocalSlot = System.Threading.Thread.AllocateDataSlot();
+		private static readonly LocalDataStoreSlot s_threadLocalSlot = System.Threading.Thread.AllocateDataSlot();
 #else
 		/// <summary>
 		/// Each thread will automatically have its instance.

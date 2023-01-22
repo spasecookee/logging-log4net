@@ -157,7 +157,7 @@ namespace log4net.Appender
 					m_fileExtension = string.Empty;
 				}
 				// Make sure any non empty extension starts with a dot
-#if NET_2_0 || MONO_2_0 || NETSTANDARD
+#if NET_2_0 || MONO_2_0 || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 				if (!string.IsNullOrEmpty(m_fileExtension) && !m_fileExtension.StartsWith("."))
 #else
 				if (m_fileExtension != null && m_fileExtension.Length > 0 && !m_fileExtension.StartsWith("."))
@@ -211,11 +211,19 @@ namespace log4net.Appender
 				StreamWriter writer = null;
 
 				// Impersonate to open the file
+#if !NETSTANDARD1_3_OR_GREATER && !NETCOREAPP3_1_OR_GREATER
 				using(SecurityContext.Impersonate(this))
 				{
 					filePath = Path.Combine(m_pickupDir, SystemInfo.NewGuid().ToString("N") + m_fileExtension);
 					writer = File.CreateText(filePath);
 				}
+#else
+                SecurityContext.Impersonate(
+                    () => {
+                        filePath = Path.Combine(m_pickupDir, SystemInfo.NewGuid().ToString("N") + m_fileExtension);
+                        writer = File.CreateText(filePath);
+                    });
+#endif
 
 				if (writer == null)
 				{
@@ -288,11 +296,14 @@ namespace log4net.Appender
 			{
 				m_securityContext = SecurityContextProvider.DefaultProvider.CreateSecurityContext(this);
 			}
-
+#if !NETSTANDARD1_3_OR_GREATER && !NETCOREAPP3_1_OR_GREATER
 			using(SecurityContext.Impersonate(this))
 			{
 				m_pickupDir = ConvertToFullPath(m_pickupDir.Trim());
 			}
+#else
+            m_pickupDir = SecurityContext.Impersonate(() => ConvertToFullPath(m_pickupDir.Trim()));
+#endif
 		}
 
 		/// <summary>

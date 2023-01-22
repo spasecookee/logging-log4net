@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net462;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>net462;netcoreapp3.1;net6.0</TargetFrameworks>
     <NoWarn>NETSDK1138;CS1701</NoWarn>
     <ProjectType>Local</ProjectType>
     <DefaultClientScript>JScript</DefaultClientScript>
@@ -46,7 +46,10 @@
     <DefineConstants>$(DefineConstants);NETSTANDARD;NETSTANDARD2_0</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">
-    <DefineConstants>$(DefineConstants);NETSTANDARD;NETSTANDARD2_0</DefineConstants>
+    <DefineConstants>$(DefineConstants);NETCOREAPP3_1_OR_GREATER</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)'=='net6.0'">
+    <DefineConstants>$(DefineConstants);NETCOREAPP3_1_OR_GREATER;NET6_0_OR_GREATER</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)'=='Debug' ">
     <DefineConstants>TRACE;DEBUG;$(DefineConstants)</DefineConstants>
@@ -81,12 +84,11 @@
     <PackageReference Include="NUnit3TestAdapter" Version="4.2.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">
-    <PackageReference Include="NUnit3TestAdapter" Version="4.2.1" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
+  <ItemGroup Condition="$(DefineConstants.Contains(NETCOREAPP3_1_OR_GREATER))">
+    <PackageReference Include="NUnit3TestAdapter" Version="4.3.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.0" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="DateFormatter\AbsoluteTimeDateFormatterTest.cs" />
     <Compile Remove="Hierarchy\XmlHierarchyConfiguratorTest.cs" />
   </ItemGroup>
   <Import Project="../MonoForFramework.targets" />

@@ -204,10 +204,10 @@ namespace log4net.Util
 		/// Serializes this object into the <see cref="SerializationInfo" /> provided.
 		/// </para>
 		/// </remarks>
-#if NET_4_0 || MONO_4_0 || NETSTANDARD
+#if NET_4_0 || MONO_4_0 || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
         [System.Security.SecurityCritical]
 #endif
-#if !NETCF && !NETSTANDARD1_3
+#if !NETCF && !NETSTANDARD1_3_OR_GREATER && !NETCOREAPP3_1_OR_GREATER
 		[System.Security.Permissions.SecurityPermission(System.Security.Permissions.SecurityAction.Demand, SerializationFormatter = true)]
 #endif
         public virtual void GetObjectData(SerializationInfo info, StreamingContext context)

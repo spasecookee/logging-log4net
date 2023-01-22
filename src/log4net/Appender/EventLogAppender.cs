@@ -28,6 +28,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 using log4net.Util;
@@ -86,6 +87,7 @@ namespace log4net.Appender
 	/// <author>Nicko Cadell</author>
 	/// <author>Gert Driesen</author>
 	/// <author>Thomas Voss</author>
+	[SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
 	public class EventLogAppender : AppenderSkeleton
 	{
 		#region Public Instance Constructors
@@ -288,13 +290,24 @@ namespace log4net.Appender
 
                 bool sourceAlreadyExists = false;
                 string currentLogName = null;
+#if !(NETSTANDARD || NETCOREAPP3_1_OR_GREATER)
+                using (SecurityContext.Impersonate(this)) {
+                    sourceAlreadyExists = SourceAlreadyExists();
+                }
+#else
+                sourceAlreadyExists = SecurityContext.Impersonate(SourceAlreadyExists);
 
-                using (SecurityContext.Impersonate(this))
+#endif
+                bool SourceAlreadyExists()
                 {
-                    sourceAlreadyExists = EventLog.SourceExists(m_applicationName);
-                    if (sourceAlreadyExists) {
+                    currentLogName = m_logName;
+                    sourceAlreadyExists = System.Diagnostics.EventLog.SourceExists(m_applicationName, m_machineName);
+                    if (sourceAlreadyExists)
+                {
                         currentLogName = EventLog.LogNameFromSourceName(m_applicationName, m_machineName);
                     }
+
+                    return sourceAlreadyExists;
                 }
 
                 if (sourceAlreadyExists && currentLogName != m_logName)
@@ -307,7 +320,7 @@ namespace log4net.Appender
                 }
 
                 string registeredLogName = null;
-
+#if !(NETSTANDARD || NETCOREAPP3_1_OR_GREATER)
                 using (SecurityContext.Impersonate(this))
                 {
                     if (sourceAlreadyExists && currentLogName != m_logName)
@@ -327,6 +340,38 @@ namespace log4net.Appender
 
                         registeredLogName = EventLog.LogNameFromSourceName(m_applicationName, m_machineName);
                     }
+                }
+#else
+                registeredLogName = SecurityContext.Impersonate(RegisteredLogName);
+                m_logName = registeredLogName;
+#endif
+                string RegisteredLogName() {
+                    string logname = m_logName;
+                    if(!eventLogManagementDisabled)
+                    {
+                        if(sourceAlreadyExists && currentLogName != m_logName) {
+                            //
+                            // Re-register this to the current application if the user has changed
+                            // the application / logfile association
+                            //
+                            try {
+                                EventLog.DeleteEventSource(m_applicationName, m_machineName);
+                                CreateEventSource(m_applicationName, m_logName, m_machineName);
+                            }
+                            catch (System.Security.SecurityException ex) {
+                                ErrorHandler.Error("Disabling EventLog creation and deletion.", ex);
+                                eventLogManagementDisabled = true;
+                            }
+
+                            logname = EventLog.LogNameFromSourceName(m_applicationName, m_machineName);
+                        }
+                        else if(!sourceAlreadyExists) {
+                            CreateEventSource(m_applicationName, m_logName, m_machineName);
+
+                            logname = EventLog.LogNameFromSourceName(m_applicationName, m_machineName);
+                        }
+                    }
+                    return logname;
                 }
 
                 m_levelMapping.ActivateOptions();
@@ -352,9 +397,10 @@ namespace log4net.Appender
 		/// <remarks>
 		/// Uses different API calls under NET_2_0
 		/// </remarks>
-		private static void CreateEventSource(string source, string logName, string machineName)
+		private static void CreateEventSource(string source, string logName, string machineName) 
 		{
-#if NET_2_0
+            if(eventLogManagementDisabled) return;
+#if NET_2_0 || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 			EventSourceCreationData eventSourceCreationData = new EventSourceCreationData(source, logName);
 			eventSourceCreationData.MachineName = machineName;
 			EventLog.CreateEventSource(eventSourceCreationData);
@@ -606,6 +652,7 @@ namespace log4net.Appender
 		#endregion // LevelColors LevelMapping Entry
 
 	    #region Private Static Fields
+        private static bool eventLogManagementDisabled = false;
 
 	    /// <summary>
 	    /// The fully qualified type of the EventLogAppender class.

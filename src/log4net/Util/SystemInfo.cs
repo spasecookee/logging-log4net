@@ -172,7 +172,7 @@ namespace log4net.Util
 		{
 			get
 			{
-#if NETCF || NETSTANDARD
+#if NETCF || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 				return SystemInfo.EntryAssemblyLocation+".config";
 #else
 				return System.AppDomain.CurrentDomain.SetupInformation.ConfigurationFile;
@@ -237,7 +237,7 @@ namespace log4net.Util
 			{
 #if NETCF_1_0
 				return System.Threading.Thread.CurrentThread.GetHashCode();
-#elif NET_2_0 || NETCF_2_0 || MONO_2_0 || MONO_3_5 || MONO_4_0 || NETSTANDARD
+#elif NET_2_0 || NETCF_2_0 || MONO_2_0 || MONO_3_5 || MONO_4_0 || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 				return System.Threading.Thread.CurrentThread.ManagedThreadId;
 #else
 				return AppDomain.GetCurrentThreadId();
@@ -491,15 +491,17 @@ namespace log4net.Util
 #elif NETSTANDARD1_3
 						return "Not supported on .NET Core";
 #else
+#if NET_2_0
 			if (myAssembly.GlobalAssemblyCache)
 			{
 				return "Global Assembly Cache";
 			}
 			else
+#endif
 			{
 				try
 				{
-#if NET_4_0 || MONO_4_0
+#if NET_4_0 || MONO_4_0 || NETSTANDARD2_0 || NETCOREAPP3_1_OR_GREATER
 					if (myAssembly.IsDynamic)
 					{
 						return "Dynamic Assembly";
@@ -759,11 +761,13 @@ namespace log4net.Util
 						{
 							// Found type in loaded assembly
 							LogLog.Debug(declaringType, "Loaded type [" + typeName + "] from assembly [" + assembly.FullName + "] by searching loaded assemblies.");
+#if NET_2_0
 							if (assembly.GlobalAssemblyCache)
 							{
 								fallback = t;
 							}
 							else
+#endif
 							{
 								return t;
 							}
@@ -1008,7 +1012,7 @@ namespace log4net.Util
 			{
 #if NETCF || NETSTANDARD1_3
 				// Configuration APIs are not suported under the Compact Framework
-#elif NET_2_0 || NETSTANDARD2_0
+#elif NET_2_0 || NETSTANDARD2_0 || NETCOREAPP3_1_OR_GREATER
 				return ConfigurationManager.AppSettings[key];
 #else
 				return ConfigurationSettings.AppSettings[key];

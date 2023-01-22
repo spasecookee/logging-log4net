@@ -431,7 +431,7 @@ namespace log4net.Repository.Hierarchy
 			{
 				log4net.Util.LogLog.Error(declaringType, "Exception while logging", ex);
 			}
-#if !NET_2_0 && !MONO_2_0 && !MONO_3_5 && !MONO_4_0 && !NETSTANDARD
+#if !NET_2_0 && !MONO_2_0 && !MONO_3_5 && !MONO_4_0 && !NETSTANDARD && !NETCOREAPP3_1_OR_GREATER
 			catch
 			{
 				log4net.Util.LogLog.Error(declaringType, "Exception while logging");
@@ -468,7 +468,7 @@ namespace log4net.Repository.Hierarchy
 			{
 				log4net.Util.LogLog.Error(declaringType, "Exception while logging", ex);
 			}
-#if !NET_2_0 && !MONO_2_0 && !MONO_3_5 && !MONO_4_0 && !NETSTANDARD
+#if !NET_2_0 && !MONO_2_0 && !MONO_3_5 && !MONO_4_0 && !NETSTANDARD && !NETCOREAPP3_1_OR_GREATER
 			catch
 			{
 				log4net.Util.LogLog.Error(declaringType, "Exception while logging");
@@ -508,7 +508,7 @@ namespace log4net.Repository.Hierarchy
 			{
 				log4net.Util.LogLog.Error(declaringType, "Exception while logging", ex);
 			}
-#if !NET_2_0 && !MONO_2_0 && !MONO_3_5 && !MONO_4_0 && !NETSTANDARD
+#if !NET_2_0 && !MONO_2_0 && !MONO_3_5 && !MONO_4_0 && !NETSTANDARD && !NETCOREAPP3_1_OR_GREATER
 			catch
 			{
 				log4net.Util.LogLog.Error(declaringType, "Exception while logging");

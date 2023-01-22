@@ -26,7 +26,9 @@ using System.Reflection;
 #endif
 using System.Threading;
 using System.Net;
-
+#if NETSTANDARD || NETCOREAPP3_1_OR_GREATER
+using System.Net.Http;
+#endif
 using log4net.Util;
 using log4net.Repository;
 
@@ -602,7 +604,10 @@ namespace log4net.Config
 
 			return configurationMessages;
 		}
-
+		
+#if NETSTANDARD2_0 || NETCOREAPP3_1_OR_GREATER        
+        static HttpClient httpClient = new HttpClient();
+#endif
 		private static void InternalConfigure(ILoggerRepository repository, Uri configUri)
 		{
 			LogLog.Debug(declaringType, "configuring repository [" + repository.Name + "] using URI ["+configUri+"]");
@@ -620,9 +625,20 @@ namespace log4net.Config
 				}
 				else
 				{
+#if NETSTANDARD2_0 || NETCOREAPP3_1_OR_GREATER
+					try {
+						using (Stream configStream = httpClient.GetStreamAsync(configUri).GetAwaiter().GetResult()) {
+							InternalConfigure(repository, configStream);
+						}
+					}
+					catch(Exception ex)
+					{
+						LogLog.Error(declaringType, "Failed to request config from URI ["+configUri+"]", ex);
+					}
+
+#else
 					// NETCF dose not support WebClient
 					WebRequest configRequest = null;
-
 					try
 					{
 						configRequest = WebRequest.Create(configUri);
@@ -647,7 +663,7 @@ namespace log4net.Config
 #endif
 						try
 						{
-#if NETSTANDARD
+#if NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 							using WebResponse response = configRequest.GetResponseAsync().GetAwaiter().GetResult();
 #else
 							using WebResponse response = configRequest.GetResponse();
@@ -663,6 +679,7 @@ namespace log4net.Config
 							LogLog.Error(declaringType, "Failed to request config from URI ["+configUri+"]", ex);
 						}
 					}
+#endif
 				}
 			}
 		}
@@ -718,14 +735,14 @@ namespace log4net.Config
 #if (NETCF)
 					// Create a text reader for the file stream
 					XmlTextReader xmlReader = new XmlTextReader(configStream);
-#elif NET_2_0 || NETSTANDARD
+#elif NET_2_0 || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 					// Allow the DTD to specify entity includes
 					XmlReaderSettings settings = new XmlReaderSettings();
 					// .NET 4.0 warning CS0618: 'System.Xml.XmlReaderSettings.ProhibitDtd'
 					// is obsolete: 'Use XmlReaderSettings.DtdProcessing property instead.'
 #if NETSTANDARD1_3 // TODO DtdProcessing.Parse not yet available (https://github.com/dotnet/corefx/issues/4376)
 					settings.DtdProcessing = DtdProcessing.Ignore;
-#elif !NET_4_0 && !MONO_4_0 && !NETSTANDARD2_0
+#elif !NET_4_0 && !MONO_4_0 && !NETSTANDARD2_0 && !NETCOREAPP3_1_OR_GREATER
 					settings.ProhibitDtd = true;
 #else
 					settings.DtdProcessing = DtdProcessing.Ignore;
@@ -959,7 +976,7 @@ namespace log4net.Config
 			/// Initializes a new instance of the <see cref="ConfigureAndWatchHandler" /> class.
 			/// </para>
 			/// </remarks>
-#if NET_4_0 || MONO_4_0 || NETSTANDARD
+#if NET_4_0 || MONO_4_0 || NETSTANDARD  || NETCOREAPP3_1_OR_GREATER
 			[System.Security.SecuritySafeCritical]
 #endif
 			public ConfigureAndWatchHandler(ILoggerRepository repository, FileInfo configFile)
@@ -1039,7 +1056,7 @@ namespace log4net.Config
 			/// <summary>
 			/// Release the handles held by the watcher and timer.
 			/// </summary>
-#if NET_4_0 || MONO_4_0 || NETSTANDARD
+#if NET_4_0 || MONO_4_0 || NETSTANDARD || NETCOREAPP3_1_OR_GREATER
 			[System.Security.SecuritySafeCritical]
 #endif
 			public void Dispose()
